@@ -40,6 +40,60 @@ rules:
     verbs:
       - get
   - apiGroups:
+      - osac.openshift.io
+    resources:
+      - virtualnetworks
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - osac.openshift.io
+    resources:
+      - virtualnetworks/status
+    verbs:
+      - get
+  - apiGroups:
+      - osac.openshift.io
+    resources:
+      - subnets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - osac.openshift.io
+    resources:
+      - subnets/status
+    verbs:
+      - get
+  - apiGroups:
+      - osac.openshift.io
+    resources:
+      - securitygroups
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - osac.openshift.io
+    resources:
+      - securitygroups/status
+    verbs:
+      - get
+  - apiGroups:
       - ""
     resources:
       - secrets
