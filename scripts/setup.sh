@@ -216,7 +216,7 @@ oc project ${INSTALLER_NAMESPACE}
 # Create AAP API token for the OSAC operator
 ./scripts/prepare-aap.sh
 
-# Setup fulfillment CLI, register hub
+# Setup OSAC CLI, register hub
 ./scripts/prepare-fulfillment-service.sh
 
 # Prepare tenant

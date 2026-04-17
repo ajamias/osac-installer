@@ -97,7 +97,7 @@
       }
     ],
     "client": {
-      "fulfillment-cli": [],
+      "osac-cli": [],
       "realm-management": [
         {
           "id": "6a539c7b-9c68-499a-8eaf-ac1f5cca678b",
@@ -910,9 +910,9 @@
     },
     {
       "id": "75d02386-879f-4a5f-880f-eb59f4b3f19c",
-      "clientId": "fulfillment-cli",
-      "name": "Fulfillment CLI",
-      "description": "Fulfillment command line interface",
+      "clientId": "osac-cli",
+      "name": "OSAC CLI",
+      "description": "OSAC command line interface",
       "rootUrl": "",
       "adminUrl": "",
       "baseUrl": "http://localhost",

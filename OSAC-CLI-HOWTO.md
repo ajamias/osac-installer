@@ -1,6 +1,6 @@
-# Fulfillment CLI Comprehensive How-To Guide
+# OSAC CLI Comprehensive How-To Guide
 
-This document provides a detailed, step-by-step guide for setting up, configuring, and using the Fulfillment CLI with OpenShift/Kubernetes environments, including real-world examples and troubleshooting scenarios.
+This document provides a detailed, step-by-step guide for setting up, configuring, and using the OSAC CLI with OpenShift/Kubernetes environments, including real-world examples and troubleshooting scenarios.
 
 ## Table of Contents
 
@@ -19,10 +19,10 @@ This document provides a detailed, step-by-step guide for setting up, configurin
 
 ## Overview
 
-The Fulfillment CLI is a sophisticated command-line tool that communicates with the Fulfillment Service to manage cluster lifecycle operations. It uses gRPC over HTTP/2 with JWT-based authentication and supports TLS encryption.
+The OSAC CLI is a sophisticated command-line tool that communicates with the Fulfillment Service to manage cluster lifecycle operations. It uses gRPC over HTTP/2 with JWT-based authentication and supports TLS encryption.
 
 **Architecture Components:**
-- **fulfillment-cli**: Go-based client application for cluster management
+- **osac**: Go-based client application for cluster management
 - **fulfillment-service**: Backend service with gRPC API and database integration
 - **envoy**: High-performance proxy for HTTP/gRPC translation and TLS termination
 - **OpenShift Router**: External traffic routing with TLS passthrough support
@@ -80,10 +80,10 @@ cat go.mod
 go mod download
 
 # Build the CLI with optimizations
-go build -ldflags "-X github.com/osac-project/fulfillment-service/internal/version.id=$(git describe --tags --always)" -o fulfillment-cli ./cmd/fulfillment-cli
+go build -ldflags "-X github.com/osac-project/fulfillment-service/internal/version.id=$(git describe --tags --always)" -o osac ./cmd/osac
 
 # Verify the build
-./fulfillment-cli --help
+./osac --help
 ```
 
 **Expected Output:**
@@ -91,7 +91,7 @@ go build -ldflags "-X github.com/osac-project/fulfillment-service/internal/versi
 Command line interface for the fulfillment API
 
 Usage:
-  fulfillment-cli [command]
+  osac [command]
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
@@ -109,15 +109,15 @@ Available Commands:
 
 ```bash
 # Install to system path
-sudo cp fulfillment-cli /usr/local/bin/
-sudo chmod +x /usr/local/bin/fulfillment-cli
+sudo cp osac /usr/local/bin/
+sudo chmod +x /usr/local/bin/osac
 
 # Verify system installation
-which fulfillment-cli
-# Expected output: /usr/local/bin/fulfillment-cli
+which osac
+# Expected output: /usr/local/bin/osac
 
 # Test system installation
-fulfillment-cli --version
+osac --version
 ```
 
 ### 3. Development Environment Setup
@@ -134,12 +134,12 @@ git clone https://github.com/osac-project/fulfillment-service.git
 git clone https://github.com/osac-project/osac-installer.git
 
 # Set up development environment variables
-export FULFILLMENT_CLI_ROOT=~/workspace/fulfillment/fulfillment-service
+export OSAC_CLI_ROOT=~/workspace/fulfillment/fulfillment-service
 export OSAC_INSTALLER_ROOT=~/workspace/fulfillment/osac-installer
 export KUBECONFIG=~/workspace/fulfillment/kubeconfig
 
 # Add to ~/.bashrc for persistence
-echo 'export FULFILLMENT_CLI_ROOT=~/workspace/fulfillment/fulfillment-service' >> ~/.bashrc
+echo 'export OSAC_CLI_ROOT=~/workspace/fulfillment/fulfillment-service' >> ~/.bashrc
 echo 'export OSAC_INSTALLER_ROOT=~/workspace/fulfillment/osac-installer' >> ~/.bashrc
 ```
 
@@ -147,14 +147,14 @@ echo 'export OSAC_INSTALLER_ROOT=~/workspace/fulfillment/osac-installer' >> ~/.b
 
 ### 1. Configuration File Structure
 
-The CLI stores configuration in `~/.config/fulfillment-cli/config.json`:
+The CLI stores configuration in `~/.config/osac/config.json`:
 
 ```bash
 # Create configuration directory
-mkdir -p ~/.config/fulfillment-cli
+mkdir -p ~/.config/osac
 
 # View current configuration location
-fulfillment-cli --help | grep -A5 -B5 config
+osac --help | grep -A5 -B5 config
 ```
 
 ### 2. Basic Configuration Examples
@@ -236,8 +236,8 @@ oc create token fulfillment-admin -n your-namespace --duration 1h
 **Multi-Environment Setup:**
 ```bash
 # Development environment
-export FULFILLMENT_CONFIG_DEV=~/.config/fulfillment-cli/config-dev.json
-cat > $FULFILLMENT_CONFIG_DEV << 'EOF'
+export OSAC_CONFIG_DEV=~/.config/osac/config-dev.json
+cat > $OSAC_CONFIG_DEV << 'EOF'
 {
   "token_script": "KUBECONFIG=/path/to/dev/kubeconfig oc create token dev-admin -n dev --duration 1h",
   "insecure": true,
@@ -246,8 +246,8 @@ cat > $FULFILLMENT_CONFIG_DEV << 'EOF'
 EOF
 
 # Production environment
-export FULFILLMENT_CONFIG_PROD=~/.config/fulfillment-cli/config-prod.json
-cat > $FULFILLMENT_CONFIG_PROD << 'EOF'
+export OSAC_CONFIG_PROD=~/.config/osac/config-prod.json
+cat > $OSAC_CONFIG_PROD << 'EOF'
 {
   "token_script": "oc create token fulfillment-admin -n prod --duration 8h",
   "insecure": false,
@@ -256,8 +256,8 @@ cat > $FULFILLMENT_CONFIG_PROD << 'EOF'
 EOF
 
 # Use different configurations
-cp $FULFILLMENT_CONFIG_DEV ~/.config/fulfillment-cli/config.json  # For dev
-cp $FULFILLMENT_CONFIG_PROD ~/.config/fulfillment-cli/config.json  # For prod
+cp $OSAC_CONFIG_DEV ~/.config/osac/config.json  # For dev
+cp $OSAC_CONFIG_PROD ~/.config/osac/config.json  # For prod
 ```
 
 ## OpenShift/Kubernetes Deployment
@@ -399,7 +399,7 @@ oc get configmap fulfillment-service-config-xxx -n fulfillment-system -o jsonpat
 
 ```mermaid
 graph TD
-    A[fulfillment-cli] -->|HTTP/2 + gRPC + TLS| B[OpenShift Router]
+    A[osac] -->|HTTP/2 + gRPC + TLS| B[OpenShift Router]
     B -->|TLS Passthrough| C[Service/Load Balancer]
     C -->|HTTP/2| D[Envoy Proxy]
     D -->|gRPC over Unix Socket| E[fulfillment-service]
@@ -478,7 +478,7 @@ spec:
 **Creating a Cluster:**
 ```bash
 # CLI command
-./fulfillment-cli create cluster --template simple
+./osac create cluster --template simple
 
 # Generated gRPC request
 POST /fulfillment.v1.Clusters/Create HTTP/2
@@ -512,12 +512,12 @@ grpc-status: 0
 ### 1. Understanding Hubs in OSAC Architecture
 
 **What are Hubs?**
-Hubs are OpenShift/Kubernetes clusters that have been registered with the fulfillment service to act as target environments for cluster provisioning. When you create a cluster through the fulfillment-cli, the system creates a ClusterOrder Custom Resource Definition (CRD) in one of the registered hubs, where the osac-operator processes the request.
+Hubs are OpenShift/Kubernetes clusters that have been registered with the fulfillment service to act as target environments for cluster provisioning. When you create a cluster through the `osac` CLI, the system creates a ClusterOrder Custom Resource Definition (CRD) in one of the registered hubs, where the osac-operator processes the request.
 
 **Hub Architecture Flow:**
 ```mermaid
 graph TD
-    A[fulfillment-cli] -->|Create cluster request| B[fulfillment-service]
+    A[osac] -->|Create cluster request| B[fulfillment-service]
     B -->|Store cluster request| C[PostgreSQL Database]
     B -->|Notify| D[fulfillment-controller]
     D -->|Create ClusterOrder CRD| E[Hub Cluster]
@@ -594,8 +594,8 @@ echo "Minimal kubeconfig created at /tmp/hub-kubeconfig.yaml"
 
 **Step 1: Login to Fulfillment Service**
 ```bash
-# Configure fulfillment-cli for your environment
-cat > ~/.config/fulfillment-cli/config.json << 'EOF'
+# Configure osac for your environment
+cat > ~/.config/osac/config.json << 'EOF'
 {
   "token_script": "KUBECONFIG=/root/labs/acm/deploy/auth/kubeconfig oc create token dev-admin -n foobar --duration 1h",
   "insecure": true,
@@ -604,28 +604,28 @@ cat > ~/.config/fulfillment-cli/config.json << 'EOF'
 EOF
 
 # Login to the fulfillment service
-./fulfillment-cli login
+./osac login
 ```
 
 **Step 2: Register the Hub**
 ```bash
 # Register hub with fulfillment service
-./fulfillment-cli create hub \
+./osac create hub \
   --id production-hub-01 \
   --kubeconfig /tmp/hub-kubeconfig.yaml \
   --namespace osac-operator-system
 
 # Verify hub registration
-./fulfillment-cli get hubs
+./osac get hubs
 ```
 
 **Step 3: Verify Hub Connectivity**
 ```bash
 # Check that the hub is accessible
-./fulfillment-cli describe hub production-hub-01
+./osac describe hub production-hub-01
 
 # Test cluster creation to verify end-to-end functionality
-./fulfillment-cli create cluster --template example
+./osac create cluster --template example
 ```
 
 ### 4. Hub Management Commands
@@ -633,40 +633,40 @@ EOF
 **List All Hubs:**
 ```bash
 # Basic listing
-./fulfillment-cli get hubs
+./osac get hubs
 
 # Detailed output with JSON format
-./fulfillment-cli get hubs --output json
+./osac get hubs --output json
 
 # Filter hubs by specific criteria
-./fulfillment-cli get hubs --filter "status=active"
+./osac get hubs --filter "status=active"
 ```
 
 **Hub Details:**
 ```bash
 # Get detailed information about a specific hub
-./fulfillment-cli describe hub production-hub-01
+./osac describe hub production-hub-01
 
 # Check hub connectivity status
-./fulfillment-cli get hub production-hub-01 --output yaml
+./osac get hub production-hub-01 --output yaml
 ```
 
 **Update Hub Configuration:**
 ```bash
 # Update hub kubeconfig (if token expires)
-./fulfillment-cli edit hub production-hub-01 --kubeconfig /tmp/new-hub-kubeconfig.yaml
+./osac edit hub production-hub-01 --kubeconfig /tmp/new-hub-kubeconfig.yaml
 
 # Update hub namespace
-./fulfillment-cli edit hub production-hub-01 --namespace new-namespace
+./osac edit hub production-hub-01 --namespace new-namespace
 ```
 
 **Remove Hub:**
 ```bash
 # Delete hub registration
-./fulfillment-cli delete hub production-hub-01
+./osac delete hub production-hub-01
 
 # Verify deletion
-./fulfillment-cli get hubs
+./osac get hubs
 ```
 
 ### 5. Multi-Hub Environment Setup
@@ -674,25 +674,25 @@ EOF
 **Scenario: Multiple Environment Hubs**
 ```bash
 # Development hub
-./fulfillment-cli create hub \
+./osac create hub \
   --id dev-hub \
   --kubeconfig /tmp/dev-hub-kubeconfig.yaml \
   --namespace osac-operator-system
 
 # Staging hub
-./fulfillment-cli create hub \
+./osac create hub \
   --id staging-hub \
   --kubeconfig /tmp/staging-hub-kubeconfig.yaml \
   --namespace osac-operator-system
 
 # Production hub
-./fulfillment-cli create hub \
+./osac create hub \
   --id prod-hub \
   --kubeconfig /tmp/prod-hub-kubeconfig.yaml \
   --namespace osac-operator-system
 
 # List all registered hubs
-./fulfillment-cli get hubs --output table
+./osac get hubs --output table
 ```
 
 **Hub Selection Strategy:**
@@ -752,7 +752,7 @@ KUBECONFIG=/tmp/hub-kubeconfig.yaml oc get pods -n osac-operator-system
 KUBECONFIG=/tmp/hub-kubeconfig.yaml oc get crd | grep clusterorder
 
 # Test hub from fulfillment-service perspective
-./fulfillment-cli describe hub hub-id
+./osac describe hub hub-id
 ```
 
 **Issue: Token Expiration**
@@ -771,7 +771,7 @@ NEW_TOKEN=$(oc create token hub-access -n osac-operator-system --duration=24h)
 ### 1. Understanding Cluster Orders
 
 **What are Cluster Orders?**
-Cluster Orders are Kubernetes Custom Resource Definitions (CRDs) that represent cluster provisioning requests within hub clusters. When you create a cluster via fulfillment-cli, the system:
+Cluster Orders are Kubernetes Custom Resource Definitions (CRDs) that represent cluster provisioning requests within hub clusters. When you create a cluster via osac, the system:
 
 1. Stores the request in the fulfillment-service database
 2. fulfillment-controller creates a ClusterOrder CRD in a selected hub
@@ -790,13 +790,13 @@ PENDING → ACCEPTED → PROGRESSING → READY
 **Basic Cluster Creation:**
 ```bash
 # Create cluster with default template
-./fulfillment-cli create cluster --template example
+./osac create cluster --template example
 
 # Create cluster with specific template
-./fulfillment-cli create cluster --template ocp-4-17-small
+./osac create cluster --template ocp-4-17-small
 
 # Create cluster with custom parameters
-./fulfillment-cli create cluster \
+./osac create cluster \
   --template ocp-4-17-medium \
   --parameters "region=us-east-1,instance_type=m5.xlarge"
 ```
@@ -804,12 +804,12 @@ PENDING → ACCEPTED → PROGRESSING → READY
 **Advanced Cluster Creation:**
 ```bash
 # Create cluster with specific node requirements
-./fulfillment-cli create cluster \
+./osac create cluster \
   --template ocp-4-17-large \
   --parameters "control_plane_nodes=3,worker_nodes=5,storage_class=gp3"
 
 # Create cluster with custom networking
-./fulfillment-cli create cluster \
+./osac create cluster \
   --template ocp-4-17-custom \
   --parameters "vpc_cidr=10.1.0.0/16,service_cidr=172.30.0.0/16"
 ```
@@ -819,26 +819,26 @@ PENDING → ACCEPTED → PROGRESSING → READY
 **Check Cluster Status:**
 ```bash
 # List all clusters
-./fulfillment-cli get clusters
+./osac get clusters
 
 # Get specific cluster details
 CLUSTER_ID="580594a8-3532-4809-b8ff-dd43d037ec45"
-./fulfillment-cli get cluster $CLUSTER_ID
+./osac get cluster $CLUSTER_ID
 
 # Monitor cluster creation progress
-watch -n 30 "./fulfillment-cli get cluster $CLUSTER_ID"
+watch -n 30 "./osac get cluster $CLUSTER_ID"
 ```
 
 **Detailed Cluster Information:**
 ```bash
 # Get comprehensive cluster details
-./fulfillment-cli describe cluster $CLUSTER_ID
+./osac describe cluster $CLUSTER_ID
 
 # Get cluster status in JSON format
-./fulfillment-cli get cluster $CLUSTER_ID --output json | jq '.status'
+./osac get cluster $CLUSTER_ID --output json | jq '.status'
 
 # Check cluster events and logs
-./fulfillment-cli get cluster $CLUSTER_ID --show-events
+./osac get cluster $CLUSTER_ID --show-events
 ```
 
 ### 4. Direct ClusterOrder Inspection
@@ -949,14 +949,14 @@ HUB_KUBECONFIG=${2:-/tmp/hub-kubeconfig.yaml}
 echo "Creating cluster with template: $TEMPLATE"
 
 # Create cluster and capture ID
-CLUSTER_ID=$(./fulfillment-cli create cluster --template "$TEMPLATE" | grep "ID:" | cut -d' ' -f2)
+CLUSTER_ID=$(./osac create cluster --template "$TEMPLATE" | grep "ID:" | cut -d' ' -f2)
 echo "Cluster ID: $CLUSTER_ID"
 
-# Monitor both fulfillment-cli and ClusterOrder
+# Monitor both osac and ClusterOrder
 echo "Monitoring cluster creation..."
 while true; do
     # Check cluster status via CLI
-    CLI_STATUS=$(./fulfillment-cli get cluster "$CLUSTER_ID" --output json | jq -r '.state // "UNKNOWN"')
+    CLI_STATUS=$(./osac get cluster "$CLUSTER_ID" --output json | jq -r '.state // "UNKNOWN"')
 
     # Check ClusterOrder status in hub
     export KUBECONFIG="$HUB_KUBECONFIG"
@@ -969,14 +969,14 @@ while true; do
     # Check for completion or failure
     if [[ "$CLI_STATUS" == "READY" ]]; then
         echo "Cluster successfully created!"
-        ./fulfillment-cli describe cluster "$CLUSTER_ID"
+        ./osac describe cluster "$CLUSTER_ID"
         break
     elif [[ "$CLI_STATUS" == "FAILED" || "$CO_STATUS" == "Failed" ]]; then
         echo "Cluster creation failed"
 
         # Show error details
         echo "=== Cluster Details ==="
-        ./fulfillment-cli describe cluster "$CLUSTER_ID"
+        ./osac describe cluster "$CLUSTER_ID"
 
         echo "=== ClusterOrder Details ==="
         oc describe clusterorder -n osac-operator-system \
@@ -1003,22 +1003,22 @@ case $OPERATION in
         echo "Creating $COUNT clusters with template $TEMPLATE"
         for i in $(seq 1 $COUNT); do
             echo "Creating cluster $i/$COUNT"
-            ./fulfillment-cli create cluster --template "$TEMPLATE"
+            ./osac create cluster --template "$TEMPLATE"
         done
         ;;
 
     list)
         echo "Listing all clusters:"
-        ./fulfillment-cli get clusters --output table
+        ./osac get clusters --output table
         ;;
 
     cleanup)
         echo "Cleaning up failed clusters:"
-        ./fulfillment-cli get clusters --output json | \
+        ./osac get clusters --output json | \
             jq -r '.[] | select(.state == "FAILED") | .id' | \
             while read -r cluster_id; do
                 echo "Deleting failed cluster: $cluster_id"
-                ./fulfillment-cli delete cluster "$cluster_id"
+                ./osac delete cluster "$cluster_id"
             done
         ;;
 
@@ -1026,7 +1026,7 @@ case $OPERATION in
         echo "Monitoring all active clusters:"
         while true; do
             clear
-            ./fulfillment-cli get clusters --output table
+            ./osac get clusters --output table
             echo "Last updated: $(date)"
             sleep 30
         done
@@ -1210,30 +1210,30 @@ grpcurl -insecure -H "Authorization: Bearer $(oc create token admin -n fulfillme
 **Scenario: Creating a Development Cluster**
 ```bash
 # Step 1: Login and configure CLI
-./fulfillment-cli login
+./osac login
 # Follow prompts to configure connection
 
 # Step 2: List available templates
-./fulfillment-cli get clustertemplates
+./osac get clustertemplates
 # Output:
 # ID              TITLE                 DESCRIPTION
 # ocp_4_17_small  OpenShift 4.17 small  OpenShift 4.17 with small instances
 
 # Step 3: Create cluster
-./fulfillment-cli create cluster --template ocp_4_17_small
+./osac create cluster --template ocp_4_17_small
 # Output:
 # ID: 672c0827-ef03-48d0-b825-689f83ff296b
 
 # Step 4: Monitor cluster creation
-watch -n 30 './fulfillment-cli get cluster 672c0827-ef03-48d0-b825-689f83ff296b'
+watch -n 30 './osac get cluster 672c0827-ef03-48d0-b825-689f83ff296b'
 # Watch until STATE changes to READY
 
 # Step 5: Get cluster details
-./fulfillment-cli describe cluster 672c0827-ef03-48d0-b825-689f83ff296b
+./osac describe cluster 672c0827-ef03-48d0-b825-689f83ff296b
 # Output includes API URL, console URL, and other details
 
 # Step 6: Get kubeconfig
-./fulfillment-cli get cluster 672c0827-ef03-48d0-b825-689f83ff296b --kubeconfig > cluster-kubeconfig.yaml
+./osac get cluster 672c0827-ef03-48d0-b825-689f83ff296b --kubeconfig > cluster-kubeconfig.yaml
 
 # Step 7: Test cluster access
 KUBECONFIG=cluster-kubeconfig.yaml oc get nodes
@@ -1244,21 +1244,21 @@ KUBECONFIG=cluster-kubeconfig.yaml oc get nodes
 # Create multiple clusters
 for template in ocp_4_17_small ocp_4_17_medium; do
   echo "Creating cluster with template: $template"
-  ./fulfillment-cli create cluster --template $template
+  ./osac create cluster --template $template
 done
 
 # List all clusters
-./fulfillment-cli get clusters --output table
+./osac get clusters --output table
 # Output:
 # ID                                    TEMPLATE        STATE    API URL                          CONSOLE URL
 # 672c0827-ef03-48d0-b825-689f83ff296b  ocp_4_17_small  READY    https://api.cluster1.example.com https://console.cluster1.example.com
 # 773d1938-fe04-59e1-c936-790g94gg407c  ocp_4_17_medium PENDING  -                                -
 
 # Filter clusters by state
-./fulfillment-cli get clusters --filter "state=READY"
+./osac get clusters --filter "state=READY"
 
 # Delete specific cluster
-./fulfillment-cli delete cluster 672c0827-ef03-48d0-b825-689f83ff296b
+./osac delete cluster 672c0827-ef03-48d0-b825-689f83ff296b
 ```
 
 ### 2. Automation Scripts
@@ -1276,13 +1276,13 @@ CLUSTER_NAME=${2:-dev-cluster-$(date +%Y%m%d-%H%M%S)}
 echo "Creating cluster: $CLUSTER_NAME with template: $TEMPLATE"
 
 # Create cluster
-CLUSTER_ID=$(./fulfillment-cli create cluster --template "$TEMPLATE" | grep "ID:" | cut -d' ' -f2)
+CLUSTER_ID=$(./osac create cluster --template "$TEMPLATE" | grep "ID:" | cut -d' ' -f2)
 echo "Cluster ID: $CLUSTER_ID"
 
 # Wait for cluster to be ready
 echo "Waiting for cluster to be ready..."
 while true; do
-  STATE=$(./fulfillment-cli get cluster "$CLUSTER_ID" --output json | jq -r '.state')
+  STATE=$(./osac get cluster "$CLUSTER_ID" --output json | jq -r '.state')
   echo "Current state: $STATE"
 
   if [[ "$STATE" == "READY" ]]; then
@@ -1296,10 +1296,10 @@ while true; do
 done
 
 # Get cluster details
-./fulfillment-cli describe cluster "$CLUSTER_ID"
+./osac describe cluster "$CLUSTER_ID"
 
 # Save kubeconfig
-./fulfillment-cli get cluster "$CLUSTER_ID" --kubeconfig > "${CLUSTER_NAME}-kubeconfig.yaml"
+./osac get cluster "$CLUSTER_ID" --kubeconfig > "${CLUSTER_NAME}-kubeconfig.yaml"
 echo "Kubeconfig saved to: ${CLUSTER_NAME}-kubeconfig.yaml"
 
 echo "Cluster $CLUSTER_NAME ($CLUSTER_ID) is ready!"
@@ -1313,9 +1313,9 @@ echo "Cluster $CLUSTER_NAME ($CLUSTER_ID) is ready!"
 set -euo pipefail
 
 # Delete all clusters older than 24 hours
-./fulfillment-cli get clusters --output json | jq -r '.[] | select(.created_at < (now - 86400)) | .id' | while read -r cluster_id; do
+./osac get clusters --output json | jq -r '.[] | select(.created_at < (now - 86400)) | .id' | while read -r cluster_id; do
   echo "Deleting old cluster: $cluster_id"
-  ./fulfillment-cli delete cluster "$cluster_id"
+  ./osac delete cluster "$cluster_id"
 done
 
 # Clean up kubeconfig files
@@ -1333,21 +1333,21 @@ stages:
   - deploy
 
 variables:
-  FULFILLMENT_CLI_VERSION: "v1.0.0"
+  OSAC_CLI_VERSION: "v1.0.0"
   KUBECONFIG_PATH: "/tmp/kubeconfig"
 
 before_script:
-  - curl -L "https://github.com/osac-project/fulfillment-service/releases/download/${FULFILLMENT_CLI_VERSION}/fulfillment-cli_Linux_x86_64" -o fulfillment-cli
-  - chmod +x fulfillment-cli
-  - mkdir -p ~/.config/fulfillment-cli
-  - echo "$FULFILLMENT_CLI_CONFIG" > ~/.config/fulfillment-cli/config.json
+  - curl -L "https://github.com/osac-project/fulfillment-service/releases/download/${OSAC_CLI_VERSION}/osac_Linux_x86_64" -o osac
+  - chmod +x osac
+  - mkdir -p ~/.config/osac
+  - echo "$OSAC_CLI_CONFIG" > ~/.config/osac/config.json
 
 deploy_test_cluster:
   stage: deploy
   script:
-    - CLUSTER_ID=$(./fulfillment-cli create cluster --template ocp_4_17_small | grep "ID:" | cut -d' ' -f2)
+    - CLUSTER_ID=$(./osac create cluster --template ocp_4_17_small | grep "ID:" | cut -d' ' -f2)
     - echo "CLUSTER_ID=$CLUSTER_ID" >> deploy.env
-    - ./fulfillment-cli get cluster "$CLUSTER_ID" --kubeconfig > "$KUBECONFIG_PATH"
+    - ./osac get cluster "$CLUSTER_ID" --kubeconfig > "$KUBECONFIG_PATH"
     - export KUBECONFIG="$KUBECONFIG_PATH"
     - oc get nodes
   artifacts:
@@ -1361,7 +1361,7 @@ deploy_test_cluster:
 cleanup_test_cluster:
   stage: cleanup
   script:
-    - ./fulfillment-cli delete cluster "$CLUSTER_ID"
+    - ./osac delete cluster "$CLUSTER_ID"
   dependencies:
     - deploy_test_cluster
   when: always
@@ -1429,7 +1429,7 @@ openssl s_client -connect "$ROUTE_HOST:443" -servername "$ROUTE_HOST" </dev/null
 
 # Solution options:
 # Option 1: Use insecure flag for development
-echo '{"insecure": true, "address": "...", "token_script": "..."}' > ~/.config/fulfillment-cli/config.json
+echo '{"insecure": true, "address": "...", "token_script": "..."}' > ~/.config/osac/config.json
 
 # Option 2: Add CA certificate to system trust store
 oc get secret fulfillment-api-tls -n fulfillment-system -o jsonpath='{.data.ca\.crt}' | base64 -d > /tmp/ca.crt
@@ -1442,13 +1442,13 @@ sudo update-ca-trust
 **Enable Comprehensive Logging:**
 ```bash
 # Enable all logging options
-./fulfillment-cli --log-level debug --log-headers --log-bodies get clusters
+./osac --log-level debug --log-headers --log-bodies get clusters
 
 # Save logs to file
-./fulfillment-cli --log-level debug --log-file fulfillment-debug.log get clusters
+./osac --log-level debug --log-file fulfillment-debug.log get clusters
 
 # Custom log fields
-./fulfillment-cli --log-field "session=$(date +%s)" --log-field "user=$(whoami)" get clusters
+./osac --log-field "session=$(date +%s)" --log-field "user=$(whoami)" get clusters
 ```
 
 **Analyze gRPC Communication:**
@@ -1484,7 +1484,7 @@ oc patch deployment fulfillment-service -n fulfillment-system --type='merge' -p=
 **Timeout Issues:**
 ```bash
 # Increase timeout in CLI configuration
-cat > ~/.config/fulfillment-cli/config.json << 'EOF'
+cat > ~/.config/osac/config.json << 'EOF'
 {
   "token_script": "...",
   "address": "...",
@@ -1527,99 +1527,99 @@ oc exec deployment/fulfillment-service -n fulfillment-system -c server -- lsof -
 **Cluster Management:**
 ```bash
 # Create cluster
-./fulfillment-cli create cluster --template TEMPLATE_ID [--name NAME] [--parameters KEY=VALUE]
+./osac create cluster --template TEMPLATE_ID [--name NAME] [--parameters KEY=VALUE]
 
 # List clusters
-./fulfillment-cli get clusters [--output table|json|yaml] [--filter KEY=VALUE]
+./osac get clusters [--output table|json|yaml] [--filter KEY=VALUE]
 
 # Get specific cluster
-./fulfillment-cli get cluster CLUSTER_ID [--output table|json|yaml]
+./osac get cluster CLUSTER_ID [--output table|json|yaml]
 
 # Describe cluster (detailed info)
-./fulfillment-cli describe cluster CLUSTER_ID
+./osac describe cluster CLUSTER_ID
 
 # Update cluster
-./fulfillment-cli edit cluster CLUSTER_ID [--parameters KEY=VALUE]
+./osac edit cluster CLUSTER_ID [--parameters KEY=VALUE]
 
 # Delete cluster
-./fulfillment-cli delete cluster CLUSTER_ID [--force]
+./osac delete cluster CLUSTER_ID [--force]
 
 # Get kubeconfig
-./fulfillment-cli get cluster CLUSTER_ID --kubeconfig [--output FILE]
+./osac get cluster CLUSTER_ID --kubeconfig [--output FILE]
 ```
 
 **Hub Management:**
 ```bash
 # Create hub
-./fulfillment-cli create hub --id HUB_ID --kubeconfig KUBECONFIG_FILE --namespace NAMESPACE
+./osac create hub --id HUB_ID --kubeconfig KUBECONFIG_FILE --namespace NAMESPACE
 
 # List hubs
-./fulfillment-cli get hubs [--output table|json|yaml] [--filter KEY=VALUE]
+./osac get hubs [--output table|json|yaml] [--filter KEY=VALUE]
 
 # Get specific hub
-./fulfillment-cli get hub HUB_ID [--output table|json|yaml]
+./osac get hub HUB_ID [--output table|json|yaml]
 
 # Describe hub (detailed info)
-./fulfillment-cli describe hub HUB_ID
+./osac describe hub HUB_ID
 
 # Update hub configuration
-./fulfillment-cli edit hub HUB_ID [--kubeconfig KUBECONFIG_FILE] [--namespace NAMESPACE]
+./osac edit hub HUB_ID [--kubeconfig KUBECONFIG_FILE] [--namespace NAMESPACE]
 
 # Delete hub
-./fulfillment-cli delete hub HUB_ID [--force]
+./osac delete hub HUB_ID [--force]
 ```
 
 **Template Management:**
 ```bash
 # List templates
-./fulfillment-cli get clustertemplates [--output table|json|yaml]
+./osac get clustertemplates [--output table|json|yaml]
 
 # Get specific template
-./fulfillment-cli get clustertemplate TEMPLATE_ID [--output table|json|yaml]
+./osac get clustertemplate TEMPLATE_ID [--output table|json|yaml]
 
 # Describe template
-./fulfillment-cli describe clustertemplate TEMPLATE_ID
+./osac describe clustertemplate TEMPLATE_ID
 ```
 
 **Host Types:**
 ```bash
 # List host types
-./fulfillment-cli get hosttypes [--output table|json|yaml]
+./osac get hosttypes [--output table|json|yaml]
 
 # Get specific host type
-./fulfillment-cli get hosttype HOSTTYPE_ID [--output table|json|yaml]
+./osac get hosttype HOSTTYPE_ID [--output table|json|yaml]
 
 # Describe host type
-./fulfillment-cli describe hosttype HOSTTYPE_ID
+./osac describe hosttype HOSTTYPE_ID
 ```
 
 **Configuration Management:**
 ```bash
 # Login (interactive)
-./fulfillment-cli login
+./osac login
 
 # Login (non-interactive)
-./fulfillment-cli login --address HOST:PORT --token-script "COMMAND"
+./osac login --address HOST:PORT --token-script "COMMAND"
 
 # Logout
-./fulfillment-cli logout
+./osac logout
 
 # Show current configuration
-./fulfillment-cli config view
+./osac config view
 ```
 
 ### 2. Output Formats
 
 **Table Output (Default):**
 ```bash
-./fulfillment-cli get clusters
+./osac get clusters
 # ID                                    TEMPLATE        STATE    API URL                          CONSOLE URL
 # 672c0827-ef03-48d0-b825-689f83ff296b  ocp_4_17_small  READY    https://api.cluster1.example.com https://console.cluster1.example.com
 ```
 
 **JSON Output:**
 ```bash
-./fulfillment-cli get clusters --output json
+./osac get clusters --output json
 # [
 #   {
 #     "id": "672c0827-ef03-48d0-b825-689f83ff296b",
@@ -1634,7 +1634,7 @@ oc exec deployment/fulfillment-service -n fulfillment-system -c server -- lsof -
 
 **YAML Output:**
 ```bash
-./fulfillment-cli get clusters --output yaml
+./osac get clusters --output yaml
 # - id: 672c0827-ef03-48d0-b825-689f83ff296b
 #   template: ocp_4_17_small
 #   state: READY
@@ -1818,8 +1818,8 @@ chmod +x .git/hooks/pre-commit
 **Configuration Management:**
 ```bash
 # Use environment-specific configs
-export FULFILLMENT_ENV=development
-config_file="$HOME/.config/fulfillment-cli/config-$FULFILLMENT_ENV.json"
+export OSAC_ENV=development
+config_file="$HOME/.config/osac/config-$OSAC_ENV.json"
 
 # Template for different environments
 cat > "$config_file" << 'EOF'
@@ -1843,16 +1843,16 @@ cat > health-check.sh << 'EOF'
 #!/bin/bash
 set -euo pipefail
 
-echo "Checking fulfillment-cli health..."
+echo "Checking osac CLI health..."
 
 # Test basic connectivity
-if ! timeout 10s ./fulfillment-cli get clustertemplates >/dev/null 2>&1; then
+if ! timeout 10s ./osac get clustertemplates >/dev/null 2>&1; then
     echo "ERROR: Cannot connect to fulfillment service"
     exit 1
 fi
 
 # Test authentication
-if ! timeout 10s ./fulfillment-cli get clusters >/dev/null 2>&1; then
+if ! timeout 10s ./osac get clusters >/dev/null 2>&1; then
     echo "ERROR: Authentication failed"
     exit 1
 fi
@@ -1868,7 +1868,7 @@ echo "*/5 * * * * /path/to/health-check.sh" | crontab -
 **Metrics Collection:**
 ```bash
 # Collect CLI metrics
-./fulfillment-cli --log-level info --log-file metrics.log get clusters
+./osac --log-level info --log-file metrics.log get clusters
 grep -o '"duration":"[^"]*"' metrics.log | cut -d'"' -f4 | sort -n
 
 # Service-side metrics
@@ -1880,8 +1880,8 @@ oc exec deployment/fulfillment-service -n fulfillment-system -c envoy -- curl -s
 **Configuration Backup:**
 ```bash
 # Backup CLI configuration
-mkdir -p ~/.config/fulfillment-cli/backup
-cp ~/.config/fulfillment-cli/config.json ~/.config/fulfillment-cli/backup/config-$(date +%Y%m%d-%H%M%S).json
+mkdir -p ~/.config/osac/backup
+cp ~/.config/osac/config.json ~/.config/osac/backup/config-$(date +%Y%m%d-%H%M%S).json
 
 # Backup service configuration
 oc get configmap -n fulfillment-system -o yaml > fulfillment-configmaps-backup.yaml
@@ -1891,7 +1891,7 @@ oc get secret -n fulfillment-system -o yaml > fulfillment-secrets-backup.yaml
 **Disaster Recovery:**
 ```bash
 # Restore from backup
-cp ~/.config/fulfillment-cli/backup/config-latest.json ~/.config/fulfillment-cli/config.json
+cp ~/.config/osac/backup/config-latest.json ~/.config/osac/config.json
 
 # Restore service configuration
 oc apply -f fulfillment-configmaps-backup.yaml
@@ -1900,4 +1900,4 @@ oc apply -f fulfillment-secrets-backup.yaml
 
 ---
 
-This comprehensive guide provides everything needed to successfully deploy, configure, and operate the Fulfillment CLI in production environments. For additional support, consult the project documentation or contact the development team.
+This comprehensive guide provides everything needed to successfully deploy, configure, and operate the OSAC CLI in production environments. For additional support, consult the project documentation or contact the development team.

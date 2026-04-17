@@ -280,8 +280,8 @@ $ INGRESS_SERVICE=true STORAGE_SERVICE=true \
 | `VIRT_SERVICE` | `false` | Install OpenShift Virtualization |
 | `MCE_SERVICE` | `false` | Install Multicluster Engine and infrastructure operator |
 
-> **Note:** The script requires `fulfillment-cli` to be installed and available in your
-> `PATH` (see [Fulfillment CLI: Setup & Usage](#fulfillment-cli-setup--usage) below for
+> **Note:** The script requires `osac` to be installed and available in your
+> `PATH` (see [OSAC CLI: Setup & Usage](#osac-cli-setup--usage) below for
 > installation instructions).
 
 The script will wait for all components to be ready before proceeding to the next step.
@@ -370,7 +370,7 @@ Once the `aap-bootstrap` job completes, OSAC is ready for use.
 $ oc wait --for=condition=Available deployment --all -n <project-name> --timeout=600s
 ```
 
-## Fulfillment CLI: Setup & Usage
+## OSAC CLI: Setup & Usage
 
 To install the CLI and register a hub, follow these steps:
 
@@ -380,12 +380,12 @@ Download the latest release and make it executable.
 
 ```bash
 # Adjust URL for the latest version as needed
-$ curl -L -o fulfillment-cli \
-    https://github.com/osac-project/fulfillment-service/releases/latest/download/fulfillment-cli_Linux_x86_64
-$ chmod +x fulfillment-cli
+$ curl -L -o osac \
+    https://github.com/osac-project/fulfillment-service/releases/latest/download/osac_Linux_x86_64
+$ chmod +x osac
 
 # Optional: Move to your path
-$ sudo mv fulfillment-cli /usr/local/bin/
+$ sudo mv osac /usr/local/bin/
 ```
 
 ### 2. Log in to the Service
@@ -394,7 +394,7 @@ Authenticate with the fulfillment API. You will need the route address and a val
 token generation script.
 
 ```bash
-$ fulfillment-cli login \
+$ osac login \
     --address <your-fulfillment-route-url> \
     --token-script "oc create token fulfillment-controller -n <project-name> \
     --duration 1h --as system:admin" \
@@ -415,7 +415,7 @@ for a hub.
 $ ./scripts/create-hub-access-kubeconfig.sh
 
 # Register the Hub
-$ fulfillment-cli create hub \
+$ osac create hub \
     --kubeconfig=kubeconfig.hub-access \
     --id <hub-name> \
     --namespace <project-name>
@@ -425,9 +425,9 @@ $ fulfillment-cli create hub \
 
 ### 4. Use the CLI
 
-Once configured, you can use the fulfillment CLI to manage clusters and virtual machines.
+Once configured, you can use the OSAC CLI to manage clusters and virtual machines.
 For detailed usage instructions and command reference, see the
-[fulfillment-cli documentation](https://github.com/osac-project/fulfillment-service).
+[OSAC CLI documentation](https://github.com/osac-project/fulfillment-service).
 
 ## Accessing Ansible Automation Platform
 
