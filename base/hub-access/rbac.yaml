@@ -117,6 +117,24 @@ rules:
       - publicippools/status
     verbs:
       - get
+  - apiGroups:
+      - osac.openshift.io
+    resources:
+      - publicips
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - osac.openshift.io
+    resources:
+      - publicips/status
+    verbs:
+      - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
