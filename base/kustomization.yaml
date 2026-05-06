@@ -8,6 +8,7 @@ metadata:
 resources:
   - osac-aap/config/base
   - osac-operator/config/default
+  - osac-operator/config/console-proxy
   - osac-fulfillment-service/manifests/overlays/openshift
   - hub-access
 
@@ -25,12 +26,12 @@ images:
   newName: quay.io/sclorg/postgresql-15-c9s
   newTag: latest
 - name: ghcr.io/osac-project/fulfillment-service
-  newTag: sha-ae3ef92
+  newTag: sha-99b4740
 - name: osac-aap
   newName: ghcr.io/osac-project/osac-aap
   newTag: sha-6f5dbdd
 - name: ghcr.io/osac-project/osac-operator
-  newTag: sha-7416d1b
+  newTag: sha-7cdfb42
 - name: envoy
   newName: docker.io/envoyproxy/envoy
   newTag: v1.33.0

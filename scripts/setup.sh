@@ -183,6 +183,9 @@ retry_until 60 5 'oc apply -f prerequisites/ca-issuer.yaml 2>/dev/null' || {
 }
 wait_for_resource clusterissuer/default-ca condition=Ready 300
 
+# Apply console-proxy auth-reader RoleBinding (targets kube-system, applied separately)
+oc apply -k base/osac-operator/config/console-proxy-kube-system
+
 # Apply authorino prerequisites and wait for it to be ready
 if oc get deployment authorino-operator -n openshift-operators &>/dev/null; then
     echo "Authorino operator is already installed, skipping..."
@@ -255,6 +258,15 @@ oc create secret generic fulfillment-controller-credentials \
 INSTALLER_NAMESPACE="${INSTALLER_NAMESPACE}" \
 INSTALLER_KUSTOMIZE_OVERLAY="${INSTALLER_KUSTOMIZE_OVERLAY}" \
     ./scripts/aap-configuration.sh
+
+# Detect console-proxy namespace (shared-dev pins it to "osac")
+if grep -q 'console-proxy-shared-dev' \
+    "overlays/${INSTALLER_KUSTOMIZE_OVERLAY}/kustomization.yaml" 2>/dev/null; then
+  CONSOLE_PROXY_NS="osac"
+else
+  CONSOLE_PROXY_NS="${INSTALLER_NAMESPACE}"
+fi
+wait_for_resource deployment/osac-console-proxy condition=Available 300 "${CONSOLE_PROXY_NS}"
 
 # Wait for AAP bootstrap job to complete
 echo "Waiting for AAP bootstrap job to complete (this may take up to 40 minutes)..."

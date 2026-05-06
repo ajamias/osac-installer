@@ -134,6 +134,9 @@ done
 echo "Deleting kustomize overlay resources..."
 oc kustomize "overlays/${INSTALLER_KUSTOMIZE_OVERLAY}" | delete_manifests
 
+echo "Deleting console-proxy kube-system resources..."
+oc delete -k base/osac-operator/config/console-proxy-kube-system --ignore-not-found
+
 echo "Deleting namespace ${INSTALLER_NAMESPACE}..."
 timeout 30 oc delete namespace "${INSTALLER_NAMESPACE}" --ignore-not-found --wait=false
 

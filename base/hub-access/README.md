@@ -1,8 +1,14 @@
 The fulfillment service interacts with the target hub using the credentials you pass in when you create a hub.
 
-This directory creates a `hub-access` service account for that purposes that has read/write access to ClusterOrders in the target namespace. Any other permissions required by the fulfillment service when interacting with a hub cluster should be associated with this service account.
+This directory creates a `hub-access` service account with permissions to manage OSAC resources in the target namespace:
 
-The `hub-access` secret will be updated by Kubernetes to include a non-expiring token for the `hub-access` ServiceAccount. You can generate an appropriate `kubeconfig` file for creating a hub with the following script:
+- ClusterOrders, ComputeInstances, VirtualNetworks, Subnets, SecurityGroups (full CRUD + status read)
+- Console access (`console.osac.openshift.io/computeinstances/console`)
+- Secrets (create only, for cloud-init user-data)
+
+Any other permissions required by the fulfillment service when interacting with a hub cluster should be associated with this service account.
+
+You can generate an appropriate `kubeconfig` file for creating a hub using the `scripts/create-hub-access-kubeconfig.sh` script, or manually:
 
 ```
 #!/bin/bash

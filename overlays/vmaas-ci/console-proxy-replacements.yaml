@@ -1,0 +1,25 @@
+# Fixes embedded namespace references that kustomize's namespace transformer
+# cannot reach. Sources from metadata.namespace (already transformed).
+- source:
+    kind: ServiceAccount
+    name: osac-console-proxy
+    fieldPath: metadata.namespace
+  targets:
+  - select:
+      kind: APIService
+      name: v1alpha1.console.osac.openshift.io
+    fieldPaths:
+    - metadata.annotations.[cert-manager.io/inject-ca-from]
+    options:
+      delimiter: '/'
+      index: 0
+  - select:
+      kind: Certificate
+      name: osac-console-proxy
+    fieldPaths:
+    - spec.dnsNames.1
+    - spec.dnsNames.2
+    - spec.dnsNames.3
+    options:
+      delimiter: '.'
+      index: 1

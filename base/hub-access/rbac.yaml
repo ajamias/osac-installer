@@ -94,6 +94,12 @@ rules:
     verbs:
       - get
   - apiGroups:
+      - console.osac.openshift.io
+    resources:
+      - computeinstances/console
+    verbs:
+      - get
+  - apiGroups:
       - ""
     resources:
       - secrets
