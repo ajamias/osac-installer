@@ -41,7 +41,7 @@ aap_commit=$(git -C "${REPO_ROOT}" submodule status "base/osac-aap" | awk '{prin
 aap_short="${aap_commit:0:7}"
 aap_tag="sha-${aap_short}"
 
-CI_OVERLAYS=("vmaas-ci" "caas-ci")
+CI_OVERLAYS=("vmaas-ci" "caas-ci" "osac-integration")
 
 for overlay in "${CI_OVERLAYS[@]}"; do
   overlay_file="${REPO_ROOT}/overlays/${overlay}/kustomization.yaml"
