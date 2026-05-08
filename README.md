@@ -390,9 +390,6 @@ $ oc apply -f prerequisites/cnv/cnv-config.yaml
 Once all prerequisites are ready, deploy OSAC:
 
 ```bash
-# Apply the console-proxy auth-reader RoleBinding (targets kube-system, applied separately)
-$ oc apply -k base/osac-operator/config/console-proxy-kube-system
-
 # Deploy OSAC components
 $ oc apply -k overlays/<project-name>
 ```
@@ -571,7 +568,6 @@ The script waits for all namespaces to be fully deleted before completing.
 > run this script. Instead, manually delete only the OSAC-specific resources:
 > ```bash
 > $ oc delete -k overlays/<project-name>
-> $ oc delete -k base/osac-operator/config/console-proxy-kube-system
 > $ oc delete namespace <project-name>
 > ```
 

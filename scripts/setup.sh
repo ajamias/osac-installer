@@ -183,9 +183,6 @@ retry_until 60 5 'oc apply -f prerequisites/ca-issuer.yaml 2>/dev/null' || {
 }
 wait_for_resource clusterissuer/default-ca condition=Ready 300
 
-# Apply console-proxy auth-reader RoleBinding (targets kube-system, applied separately)
-oc apply -k base/osac-operator/config/console-proxy-kube-system
-
 # Apply authorino prerequisites and wait for it to be ready
 if oc get deployment authorino-operator -n openshift-operators &>/dev/null; then
     echo "Authorino operator is already installed, skipping..."

@@ -23,3 +23,19 @@
     options:
       delimiter: '.'
       index: 1
+  - select:
+      kind: RoleBinding
+      name: osac-console-proxy-auth-reader
+    fieldPaths:
+    - subjects.0.namespace
+# Restore auth-reader RoleBinding to kube-system (namespace transformer overwrites it)
+- source:
+    kind: RoleBinding
+    name: osac-console-proxy-auth-reader
+    fieldPath: metadata.annotations.osac\.openshift\.io/deployment-namespace
+  targets:
+  - select:
+      kind: RoleBinding
+      name: osac-console-proxy-auth-reader
+    fieldPaths:
+    - metadata.namespace
