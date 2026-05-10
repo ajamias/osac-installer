@@ -11,6 +11,7 @@ INSTALLER_KUSTOMIZE_OVERLAY=${INSTALLER_KUSTOMIZE_OVERLAY:-"development"}
 INSTALLER_NAMESPACE=${INSTALLER_NAMESPACE:-$(grep "^namespace:" "overlays/${INSTALLER_KUSTOMIZE_OVERLAY}/kustomization.yaml" | awk '{print $2}')}
 [[ -z "${INSTALLER_NAMESPACE}" ]] && echo "ERROR: Could not determine namespace from overlays/${INSTALLER_KUSTOMIZE_OVERLAY}/kustomization.yaml" && exit 1
 INSTALLER_VM_TEMPLATE=${INSTALLER_VM_TEMPLATE:-}
+INSTALLER_CLUSTER_TEMPLATE=${INSTALLER_CLUSTER_TEMPLATE:-}
 
 # Create hub access kubeconfig
 ./scripts/create-hub-access-kubeconfig.sh
@@ -23,7 +24,7 @@ FULFILLMENT_INTERNAL_API_URL=https://$(oc get route -n ${INSTALLER_NAMESPACE} fu
 osac login --insecure --private --token-script "oc create token -n ${INSTALLER_NAMESPACE} admin" --address ${FULFILLMENT_INTERNAL_API_URL}
 osac create hub --kubeconfig=/tmp/kubeconfig.hub-access --id hub --namespace ${INSTALLER_NAMESPACE}
 
-if [[ -n "${INSTALLER_VM_TEMPLATE}" ]]; then
+if [[ -n "${INSTALLER_VM_TEMPLATE}" || -n "${INSTALLER_CLUSTER_TEMPLATE}" ]]; then
     # Trigger a one-time publish-templates AAP job
     AAP_ROUTE_HOST=$(oc get routes -n "${INSTALLER_NAMESPACE}" --no-headers osac-aap -o jsonpath='{.spec.host}')
     AAP_URL="https://${AAP_ROUTE_HOST}"
@@ -40,9 +41,19 @@ if [[ -n "${INSTALLER_VM_TEMPLATE}" ]]; then
         exit 1
     }
 
-    echo "Waiting for computeinstancetemplate ${INSTALLER_VM_TEMPLATE} to be published..."
-    retry_until 300 5 '[[ -n "$(osac get computeinstancetemplate -o json | jq -r --arg tpl "$INSTALLER_VM_TEMPLATE" '"'"'select(.id == $tpl)'"'"' 2> /dev/null)" ]]' || {
-        echo "Timed out waiting for computeinstancetemplate to exist"
-        exit 1
-    }
+    if [[ -n "${INSTALLER_VM_TEMPLATE}" ]]; then
+        echo "Waiting for computeinstancetemplate ${INSTALLER_VM_TEMPLATE} to be published..."
+        retry_until 300 5 '[[ -n "$(osac get computeinstancetemplate -o json | jq -r --arg tpl "$INSTALLER_VM_TEMPLATE" '"'"'select(.id == $tpl)'"'"' 2> /dev/null)" ]]' || {
+            echo "Timed out waiting for computeinstancetemplate to exist"
+            exit 1
+        }
+    fi
+
+    if [[ -n "${INSTALLER_CLUSTER_TEMPLATE}" ]]; then
+        echo "Waiting for clustertemplate ${INSTALLER_CLUSTER_TEMPLATE} to be published..."
+        retry_until 300 5 '[[ -n "$(osac get clustertemplate -o json | jq -r --arg tpl "$INSTALLER_CLUSTER_TEMPLATE" '"'"'select(.id == $tpl)'"'"' 2> /dev/null)" ]]' || {
+            echo "Timed out waiting for clustertemplate to exist"
+            exit 1
+        }
+    fi
 fi
