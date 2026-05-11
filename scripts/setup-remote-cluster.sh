@@ -16,7 +16,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 INSTALLER_NAMESPACE=$(grep "^namespace:" "${REPO_ROOT}/overlays/${INSTALLER_KUSTOMIZE_OVERLAY}/kustomization.yaml" | awk '{print $2}')
 [[ -z "${INSTALLER_NAMESPACE}" ]] && echo "ERROR: Could not determine namespace from overlays/${INSTALLER_KUSTOMIZE_OVERLAY}/kustomization.yaml" && exit 1
 
-hub="--kubeconfig ${HUB_KUBECONFIG} --as system:admin"
+hub="--kubeconfig ${HUB_KUBECONFIG}"
 remote="--kubeconfig ${REMOTE_KUBECONFIG}"
 
 SKIP_PREREQUISITES=${SKIP_PREREQUISITES:-"false"}
@@ -128,17 +128,6 @@ else
 echo "Skipping prerequisites (LVMS, CNV) -- SKIP_PREREQUISITES=true"
 fi
 
-# Remote cluster: default NetworkAttachmentDefinition
-cat <<EOF | oc ${remote} apply -f -
-apiVersion: k8s.cni.cncf.io/v1
-kind: NetworkAttachmentDefinition
-metadata:
-  name: default
-  namespace: openshift-ovn-kubernetes
-spec:
-  config: '{"cniVersion": "0.4.0", "name": "ovn-kubernetes", "type": "ovn-k8s-cni-overlay"}'
-EOF
-
 # Remote cluster: prepare for OSAC
 
 REMOTE_STORAGE_CLASS=${REMOTE_STORAGE_CLASS:-"lvms-vg1"}
@@ -216,7 +205,7 @@ JOB_ID=$(oc ${hub} exec deployment/fulfillment-grpc-server -n ${INSTALLER_NAMESP
 [[ -z "${JOB_ID}" || "${JOB_ID}" == "null" ]] && echo "ERROR: Failed to launch config-as-code job" && exit 1
 
 echo "Waiting for config-as-code job ${JOB_ID}..."
-timeout 600 bash -c "
+timeout 900 bash -c "
     until STATUS=\$(oc ${hub} exec deployment/fulfillment-grpc-server -n ${INSTALLER_NAMESPACE} -- \
         sh -c \"curl -sk http://osac-aap:80/api/controller/v2/jobs/${JOB_ID}/ \
         -H 'Authorization: Bearer ${AAP_TOKEN}'\" 2>/dev/null | jq -r '.status') && \
