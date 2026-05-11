@@ -42,9 +42,9 @@ secretGenerator:
   options:
     disableNameSuffixHash: true
   literals:
-    - AAP_EE_IMAGE=ghcr.io/osac-project/osac-aap:sha-6f5dbdd
+    - AAP_EE_IMAGE=ghcr.io/osac-project/osac-aap:sha-744bc2c
     - AAP_PROJECT_GIT_URI="https://github.com/osac-project/osac-aap"
-    - AAP_PROJECT_GIT_BRANCH=6f5dbddc7f0f269e1cc7c4787d468c54acf3271a
+    - AAP_PROJECT_GIT_BRANCH=744bc2ca0f8e393f8c4be1116956d2c4b1329060
 
 - name: cluster-fulfillment-ig
   options:
