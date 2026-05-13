@@ -381,6 +381,8 @@ patches:
                     "/osac.public.v1.PublicIPs/Delete",
                     "/osac.public.v1.PublicIPs/Get",
                     "/osac.public.v1.PublicIPs/List",
+                    "/osac.public.v1.Console/Connect",
+                    "/osac.public.v1.Console/GetAccess",
                     "/osac.public.v1.Roles/Get",
                     "/osac.public.v1.Roles/List",
                     "/osac.public.v1.RoleBindings/Get",
@@ -415,3 +417,6 @@ patches:
                           : auth.identity.user.username.split(":")[3]
                 metrics: false
                 priority: 0
+
+replacements:
+- path: console-proxy-replacements.yaml

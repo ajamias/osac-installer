@@ -19,19 +19,13 @@ INSTALLER_NAMESPACE=$(grep "^namespace:" "${REPO_ROOT}/overlays/${INSTALLER_KUST
 hub="--kubeconfig ${HUB_KUBECONFIG}"
 remote="--kubeconfig ${REMOTE_KUBECONFIG}"
 
+SKIP_PREREQUISITES=${SKIP_PREREQUISITES:-"false"}
+
+if [[ "${SKIP_PREREQUISITES}" != "true" ]]; then
+
 OCP_VERSION=$(oc ${remote} version -o json | jq -r '.openshiftVersion' | cut -d. -f1-2)
 
 # Remote cluster: install prerequisites
-
-cat <<EOF | oc ${remote} apply -f -
-apiVersion: k8s.cni.cncf.io/v1
-kind: NetworkAttachmentDefinition
-metadata:
-  name: default
-  namespace: openshift-ovn-kubernetes
-spec:
-  config: '{"cniVersion": "0.4.0", "name": "ovn-kubernetes", "type": "ovn-k8s-cni-overlay"}'
-EOF
 
 # LVMS
 cat <<EOF | oc ${remote} apply -f -
@@ -130,10 +124,16 @@ retry_until 600 15 "oc ${remote} get hyperconverged kubevirt-hyperconverged -n o
     -o jsonpath='{.status.conditions[?(@.type==\"Available\")].status}' 2>/dev/null | grep -q True" || { echo "Timed out waiting for CNV to be available"; exit 1; }
 echo "CNV ready"
 
+else
+echo "Skipping prerequisites (LVMS, CNV) -- SKIP_PREREQUISITES=true"
+fi
+
 # Remote cluster: prepare for OSAC
 
+REMOTE_STORAGE_CLASS=${REMOTE_STORAGE_CLASS:-"lvms-vg1"}
+
 oc ${remote} create namespace ${INSTALLER_NAMESPACE}
-oc ${remote} label sc lvms-vg1 "osac.openshift.io/tenant=${INSTALLER_NAMESPACE}" --overwrite
+oc ${remote} label sc "${REMOTE_STORAGE_CLASS}" "osac.openshift.io/tenant=${INSTALLER_NAMESPACE}" --overwrite
 oc ${remote} create serviceaccount osac-remote-access -n ${INSTALLER_NAMESPACE}
 oc ${remote} adm policy add-cluster-role-to-user cluster-admin \
     "system:serviceaccount:${INSTALLER_NAMESPACE}:osac-remote-access"
@@ -166,6 +166,9 @@ EOF
 
 oc ${hub} create secret generic osac-remote-kubeconfig \
     --from-file=kubeconfig="${REMOTE_KUBECONFIG_FILE}" \
+    -n ${INSTALLER_NAMESPACE}
+oc ${hub} label secret osac-remote-kubeconfig \
+    osac.openshift.io/remote-cluster-kubeconfig=true \
     -n ${INSTALLER_NAMESPACE}
 
 rm -f "${REMOTE_KUBECONFIG_FILE}"
@@ -202,7 +205,7 @@ JOB_ID=$(oc ${hub} exec deployment/fulfillment-grpc-server -n ${INSTALLER_NAMESP
 [[ -z "${JOB_ID}" || "${JOB_ID}" == "null" ]] && echo "ERROR: Failed to launch config-as-code job" && exit 1
 
 echo "Waiting for config-as-code job ${JOB_ID}..."
-timeout 600 bash -c "
+timeout 900 bash -c "
     until STATUS=\$(oc ${hub} exec deployment/fulfillment-grpc-server -n ${INSTALLER_NAMESPACE} -- \
         sh -c \"curl -sk http://osac-aap:80/api/controller/v2/jobs/${JOB_ID}/ \
         -H 'Authorization: Bearer ${AAP_TOKEN}'\" 2>/dev/null | jq -r '.status') && \

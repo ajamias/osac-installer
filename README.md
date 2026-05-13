@@ -28,7 +28,7 @@ different environments.
 
 ## OSAC Components
 
-The OSAC platform relies on three core components to deliver governed self-service:
+The OSAC platform relies on four core components to deliver governed self-service:
 
 1. **Fulfillment Service:**
    The API and frontend entry point used to manage user requests and map them to specific
@@ -39,7 +39,11 @@ The OSAC platform relies on three core components to deliver governed self-servi
    lifecycle of clusters and VMs by coordinating between the Fulfillment Service and the
    automation backend.
 
-3. **Automation Backend (AAP):**
+3. **Console Proxy:**
+   A Kubernetes aggregated API server that provides serial and VNC console access to
+   ComputeInstance VMs. Deployed alongside the operator on each hub.
+
+4. **Automation Backend (AAP):**
    Leverages the **Red Hat Ansible Automation Platform** to store and execute the custom
    template logic required for provisioning.
 
@@ -386,6 +390,7 @@ $ oc apply -f prerequisites/cnv/cnv-config.yaml
 Once all prerequisites are ready, deploy OSAC:
 
 ```bash
+# Deploy OSAC components
 $ oc apply -k overlays/<project-name>
 ```
 

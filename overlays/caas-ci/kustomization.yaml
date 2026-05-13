@@ -289,3 +289,6 @@ patches:
                 allow {
                   is_jwt_admin
                 }
+
+replacements:
+- path: console-proxy-replacements.yaml

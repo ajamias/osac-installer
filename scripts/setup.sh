@@ -256,6 +256,15 @@ INSTALLER_NAMESPACE="${INSTALLER_NAMESPACE}" \
 INSTALLER_KUSTOMIZE_OVERLAY="${INSTALLER_KUSTOMIZE_OVERLAY}" \
     ./scripts/aap-configuration.sh
 
+# Detect console-proxy namespace (shared-dev pins it to "osac")
+if grep -q 'console-proxy-shared-dev' \
+    "overlays/${INSTALLER_KUSTOMIZE_OVERLAY}/kustomization.yaml" 2>/dev/null; then
+  CONSOLE_PROXY_NS="osac"
+else
+  CONSOLE_PROXY_NS="${INSTALLER_NAMESPACE}"
+fi
+wait_for_resource deployment/osac-console-proxy condition=Available 300 "${CONSOLE_PROXY_NS}"
+
 # Wait for AAP bootstrap job to complete
 echo "Waiting for AAP bootstrap job to complete (this may take up to 40 minutes)..."
 wait_for_resource job/aap-bootstrap condition=complete 2400 ${INSTALLER_NAMESPACE}

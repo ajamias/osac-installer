@@ -282,6 +282,8 @@ patches:
                     "/osac.public.v1.PublicIPs/Delete",
                     "/osac.public.v1.PublicIPs/Get",
                     "/osac.public.v1.PublicIPs/List",
+                    "/osac.public.v1.Console/Connect",
+                    "/osac.public.v1.Console/GetAccess",
                   }
                 }
 
@@ -292,3 +294,6 @@ patches:
                 allow {
                   is_jwt_admin
                 }
+
+replacements:
+- path: console-proxy-replacements.yaml

@@ -48,6 +48,9 @@ configMapGenerator:
       - OSAC_TEMPLATE_COLLECTIONS=osac.templates,isaiahstapleton.ai_cluster_ansible
       - OSAC_FULFILLMENT_SERVICE_URI=https://fulfillment-internal-api:8001
 
+replacements:
+- path: console-proxy-replacements.yaml
+
 images:
   - name: ghcr.io/osac-project/osac-operator
     digest: sha256:9b271b405219e6be4c61259b8ebfcb3b41a7fa58ecccd6ada93c10d046f510a8
