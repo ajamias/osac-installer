@@ -1,5 +1,9 @@
-# Fixes embedded namespace references that kustomize's namespace transformer
-# cannot reach. Sources from metadata.namespace (already transformed).
+# Propagates the post-transformer namespace into embedded references that
+# kustomize's namespace transformer cannot reach (APIService annotation,
+# Certificate dnsNames, auth-reader subject). Also restores the auth-reader
+# RoleBinding to kube-system after the namespace transformer overwrites it.
+# Must be at overlay level: Component replacements run before the namespace
+# transformer and would read the wrong (pre-transformer) namespace.
 - source:
     kind: ServiceAccount
     name: osac-console-proxy
