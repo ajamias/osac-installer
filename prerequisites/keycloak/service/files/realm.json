@@ -310,7 +310,7 @@
           "attributes": {}
         }
       ],
-      "fulfillment-controller": [],
+      "osac-controller": [],
       "security-admin-console": [],
       "admin-cli": [],
       "account-console": [],
@@ -959,7 +959,7 @@
     },
     {
       "id": "90e7d0e5-cac0-4de7-94cd-bcfe2cb1ae3c",
-      "clientId": "fulfillment-controller",
+      "clientId": "osac-controller",
       "name": "Fulfillment controller",
       "description": "Fulfillment controller",
       "rootUrl": "",
