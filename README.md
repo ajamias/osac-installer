@@ -129,10 +129,17 @@ Use Kustomize to manage your environment-specific configurations.
 
    - In `kustomization.yaml`: Update the `namespace` field to `<project-name>`
    - In `prefixTransformer.yaml`: Update the `prefix` field to `<project-name>-`
-   - In `ca-trust-bundle.yaml`: Update the `values` field element
-     to `<project-name>`. The Bundle name must stay `ca-bundle` because
-     trust-manager names the generated ConfigMap after the Bundle, and pods
-     mount the ConfigMap by that name.
+   - The `ca-bundle` Bundle is cluster-scoped and shared across overlays.
+     **If using `setup.sh`**, it handles the Bundle automatically (creates it on
+     first deploy, patches the namespace selector on subsequent deploys).
+     **If deploying manually**, patch the Bundle to include your namespace:
+     ```bash
+     oc patch bundle ca-bundle --type=json -p '[
+       {"op":"add","path":"/spec/target/namespaceSelector/matchExpressions/0/values/-","value":"<project-name>"}
+     ]'
+     ```
+     If no `ca-bundle` Bundle exists yet, apply `ca-trust-bundle.yaml` once:
+     `oc apply -f overlays/<project-name>/ca-trust-bundle.yaml`
    - In `kustomization.yaml`: Replace `<cluster-name>.<base-domain>` in the `OSAC_AAP_URL`
      value with your cluster's actual domain (e.g., `mgmt.example.devcluster.openshift.com`).
      You can find it by running: `oc get ingresses.config/cluster -o jsonpath='{.spec.domain}'`
